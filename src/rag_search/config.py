@@ -19,7 +19,7 @@ class Settings:
         self.chunk_overlap = int(os.environ.get("RAG_CHUNK_OVERLAP", 200))
         self.top_k = int(os.environ.get("RAG_TOP_K", 5))
 
-        self.llm_model = os.environ.get("RAG_LLM_MODEL", "qwen2.5:7b-instruct")
+        self.llm_model = os.environ.get("RAG_LLM_MODEL", "qwen3:8b")
         self.llm_max_tokens = int(os.environ.get("RAG_LLM_MAX_TOKENS", 1024))
         self.llm_temperature = float(os.environ.get("RAG_LLM_TEMPERATURE", 0.2))
 

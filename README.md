@@ -17,17 +17,33 @@
 
 ## Запуск
 
+На Windows клонируйте проект в папку без кириллицы в пути (например `D:\projects`), иначе ChromaDB может не открыть базу.
+
 ```bash
 git clone https://github.com/arlequiiin/local-rag-search.git
 cd local-rag-search
 python -m venv .venv
-.venv\Scripts\activate          # Windows
+.venv\Scripts\activate          # Windows, cmd
+# .venv\Scripts\Activate.ps1    # Windows, PowerShell
 # source .venv/bin/activate     # Linux / macOS
 pip install -e ".[all]"
-ollama pull qwen2.5:7b-instruct
 ```
 
-Команда `rag-search` появляется только внутри виртуального окружения, поэтому в новом окне терминала его нужно сначала активировать. Ollama ставить не обязательно, без неё будет работать только поиск.
+Команда `rag-search` появляется только внутри виртуального окружения, поэтому в новом окне терминала его нужно сначала активировать.
+
+Если есть видеокарта NVIDIA, перед `pip install` поставьте torch с поддержкой CUDA, иначе всё будет считаться на процессоре (команду под свою систему можно взять на [pytorch.org](https://pytorch.org/get-started/locally/)):
+
+```bash
+pip install torch --index-url https://download.pytorch.org/whl/cu128
+```
+
+LLM работает через [Ollama](https://ollama.com/download), её нужно установить отдельно, после чего скачать модель:
+
+```bash
+ollama pull qwen3:8b
+```
+
+Ollama ставить не обязательно, без неё будет работать только поиск. Другую модель можно выбрать через переменную окружения `RAG_LLM_MODEL`.
 
 Демо на данных SberQuAD:
 
@@ -35,6 +51,8 @@ ollama pull qwen2.5:7b-instruct
 rag-search load-sberquad
 streamlit run app/streamlit_app.py
 ```
+
+Пока идёт `load-sberquad` или `ingest`, Streamlit лучше не запускать: ChromaDB не рассчитана на запись из двух процессов сразу.
 
 При первом запуске `load-sberquad` скачивает с Hugging Face датасет (~5 МБ) и модель эмбеддингов (~1 ГБ). Если датасет не скачивается, его можно скачать вручную по ссылке из сообщения об ошибке и положить в `data/sberquad/sberquad_validation.parquet`.
 
