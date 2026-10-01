@@ -1,0 +1,8 @@
+[server]
+# Наблюдатель за файлами обходит все импортированные модули, в том числе transformers,
+# и сыплет в консоль ошибками "No module named 'torchvision'". Автоперезагрузка
+# при правке кода нам не нужна, поэтому выключаем его.
+fileWatcherType = "none"
+
+[browser]
+gatherUsageStats = false

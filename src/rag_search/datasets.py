@@ -1,12 +1,12 @@
 """Загрузка SberQuAD - открытого русскоязычного QA-датасета - для демо и оценки поиска."""
 
-import urllib.request
+import shutil
 from dataclasses import dataclass
 from pathlib import Path
 
-SBERQUAD_URL = (
-    "https://huggingface.co/datasets/kuznetsoffandrey/sberquad/resolve/main/sberquad/validation-00000-of-00001.parquet"
-)
+SBERQUAD_REPO = "kuznetsoffandrey/sberquad"
+SBERQUAD_FILE = "sberquad/validation-00000-of-00001.parquet"
+SBERQUAD_URL = f"https://huggingface.co/datasets/{SBERQUAD_REPO}/resolve/main/{SBERQUAD_FILE}"
 
 
 @dataclass
@@ -22,11 +22,45 @@ class Question:
     passage_id: str
 
 
+def is_parquet(path: Path) -> bool:
+    """Файл существует и похож на целый parquet (магические байты PAR1 в начале и в конце)."""
+    if not path.is_file() or path.stat().st_size < 8:
+        return False
+    with path.open("rb") as f:
+        head = f.read(4)
+        f.seek(-4, 2)
+        return head == b"PAR1" and f.read(4) == b"PAR1"
+
+
 def download_sberquad(target_dir: Path) -> Path:
+    """Скачивает validation-часть SberQuAD в target_dir (если там ещё нет целого файла).
+
+    Качаем через huggingface_hub: он понимает HF_TOKEN, HF_ENDPOINT (зеркало) и прокси,
+    а файл в target_dir появляется только после успешной загрузки - оборванная загрузка
+    не оставит пустой файл, из-за которого pandas потом падает.
+    """
     target_dir.mkdir(parents=True, exist_ok=True)
     path = target_dir / "sberquad_validation.parquet"
-    if not path.exists():
-        urllib.request.urlretrieve(SBERQUAD_URL, path)
+    if is_parquet(path):
+        return path
+    # Пустой или битый файл от прошлой неудачной загрузки
+    path.unlink(missing_ok=True)
+
+    try:
+        from huggingface_hub import hf_hub_download
+
+        cached = hf_hub_download(repo_id=SBERQUAD_REPO, filename=SBERQUAD_FILE, repo_type="dataset")
+    except Exception as exc:
+        raise RuntimeError(
+            f"Не удалось скачать SberQuAD: {exc}\nСкачайте файл вручную: {SBERQUAD_URL}\nи положите его сюда: {path}"
+        ) from exc
+
+    tmp = path.with_suffix(".part")
+    shutil.copyfile(cached, tmp)
+    if not is_parquet(tmp):
+        tmp.unlink(missing_ok=True)
+        raise RuntimeError(f"Скачанный файл SberQuAD повреждён, попробуйте ещё раз ({SBERQUAD_URL})")
+    tmp.replace(path)
     return path
 
 

@@ -21,12 +21,13 @@
 git clone https://github.com/arlequiiin/local-rag-search.git
 cd local-rag-search
 python -m venv .venv
-.venv\Scripts\activate
+.venv\Scripts\activate          # Windows
+# source .venv/bin/activate     # Linux / macOS
 pip install -e ".[all]"
 ollama pull qwen2.5:7b-instruct
 ```
 
-Ollama ставить не обязательно, без неё будет работать только поиск.
+Команда `rag-search` появляется только внутри виртуального окружения, поэтому в новом окне терминала его нужно сначала активировать. Ollama ставить не обязательно, без неё будет работать только поиск.
 
 Демо на данных SberQuAD:
 
@@ -34,6 +35,8 @@ Ollama ставить не обязательно, без неё будет ра
 rag-search load-sberquad
 streamlit run app/streamlit_app.py
 ```
+
+При первом запуске `load-sberquad` скачивает с Hugging Face датасет (~5 МБ) и модель эмбеддингов (~1 ГБ). Если датасет не скачивается, его можно скачать вручную по ссылке из сообщения об ошибке и положить в `data/sberquad/sberquad_validation.parquet`.
 
 Свои документы:
 
