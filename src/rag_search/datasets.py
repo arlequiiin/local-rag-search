@@ -82,9 +82,16 @@ def prepare_sberquad(target_dir: Path, n_passages: int = 1000) -> tuple[list[Pas
     return passages, questions
 
 
-def title_from_text(text: str, limit: int = 60) -> str:
-    """Первое предложение абзаца, обрезанное до limit символов по границе слова."""
+def title_from_text(text: str, limit: int = 60, min_length: int = 20) -> str:
+    """Первое предложение абзаца, обрезанное до limit символов по границе слова.
+
+    Если до первой точки слишком мало текста (инициалы "А. Н. Толстой", сокращения "фр."),
+    берётся начало абзаца целиком, иначе заголовок получается вроде "А".
+    """
+    text = text.strip()
     first = text.split(".")[0].strip()
+    if len(first) < min_length:
+        first = text
     if len(first) <= limit:
         return first
-    return first[:limit].rsplit(" ", 1)[0] + "..."
+    return first[:limit].rsplit(" ", 1)[0].rstrip(" .,;:-—") + "..."
